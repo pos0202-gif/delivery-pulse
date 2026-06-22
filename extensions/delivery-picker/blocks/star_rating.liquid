@@ -1,0 +1,157 @@
+{% assign delivery_settings = shop.metafields.deliverypulse.settings.value %}
+
+{% if delivery_settings == blank or delivery_settings.enabled != false %}
+  <div class="delivery-pulse-widget">
+    <h3>Choose Delivery Date</h3>
+
+    <input
+      type="date"
+      id="delivery-pulse-date"
+      required
+    >
+
+    <h3 style="margin-top:16px;">Delivery Time</h3>
+
+    {% if delivery_settings == blank or delivery_settings.enableMorning %}
+      <label>
+        <input type="radio" name="delivery_pulse_time" value="Morning" required>
+        Morning
+      </label><br>
+    {% endif %}
+
+    {% if delivery_settings == blank or delivery_settings.enableAfternoon %}
+      <label>
+        <input type="radio" name="delivery_pulse_time" value="Afternoon" required>
+        Afternoon
+      </label><br>
+    {% endif %}
+
+    {% if delivery_settings == blank or delivery_settings.enableEvening %}
+      <label>
+        <input type="radio" name="delivery_pulse_time" value="Evening" required>
+        Evening
+      </label><br>
+    {% endif %}
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const dateInput = document.getElementById("delivery-pulse-date");
+    const form = document.querySelector('form[action="/cart/add"]');
+    const addButton = document.querySelector('button[name="add"]');
+
+    if (!dateInput || !form || !addButton) return;
+
+    const disableSunday =
+      {{ delivery_settings.disableSunday | default: true | json }};
+
+    const minimumPreparationDays =
+      {{ delivery_settings.minimumPreparationDays | default: 1 | json }};
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const minimumDate = new Date(today);
+    minimumDate.setDate(
+      minimumDate.getDate() + Number(minimumPreparationDays || 0)
+    );
+
+    const minimumDateString = minimumDate.toISOString().split("T")[0];
+    dateInput.setAttribute("min", minimumDateString);
+
+    function validateDeliveryDate() {
+      const date = dateInput.value;
+
+      if (!date) {
+        return false;
+      }
+
+      const selectedDate = new Date(date + "T00:00:00");
+
+      if (selectedDate < minimumDate) {
+        alert(
+          "Earliest available delivery date is " +
+          minimumDate.toLocaleDateString()
+        );
+
+        dateInput.value = "";
+        return false;
+      }
+
+      if (disableSunday && selectedDate.getDay() === 0) {
+        alert("Sunday delivery is not available.");
+        dateInput.value = "";
+        return false;
+      }
+
+      return true;
+    }
+
+    dateInput.addEventListener("change", () => {
+      validateDeliveryDate();
+    });
+
+    addButton.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const isValidDate = validateDeliveryDate();
+
+      if (!isValidDate) {
+        if (!dateInput.value) {
+          alert("Please choose a delivery date.");
+        }
+        return;
+      }
+
+      const date = dateInput.value;
+      const time = document.querySelector(
+        'input[name="delivery_pulse_time"]:checked'
+      )?.value;
+
+      if (!time) {
+        alert("Please choose a delivery time.");
+        return;
+      }
+
+      const formData = new FormData(form);
+
+      formData.append("properties[Delivery Date]", date);
+      formData.append("properties[Delivery Time]", time);
+
+      try {
+        addButton.setAttribute("disabled", "disabled");
+
+        const response = await fetch("/cart/add.js", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add item to cart");
+        }
+
+        await response.json();
+
+        window.location.href = "/cart";
+      } catch (error) {
+        console.error(error);
+        alert("Could not add item to cart. Please try again.");
+      } finally {
+        addButton.removeAttribute("disabled");
+      }
+    });
+  });
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Delivery Pulse",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}
