@@ -122,8 +122,8 @@ export default function Index() {
     <s-page heading="DeliveryPulse Settings">
       <s-section heading="Delivery Date Picker">
         <s-paragraph>
-          Let customers choose their preferred delivery date and time slot on
-          the product page.
+          Allow customers to select an available delivery date and time directly
+          on the product page.
         </s-paragraph>
 
         <fetcher.Form method="post">
@@ -142,7 +142,12 @@ export default function Index() {
               defaultValue={String(settings.minimumPreparationDays)}
             />
 
-            <s-section heading="Available Time Slots">
+            <s-paragraph>
+              Customers can only choose dates after the required preparation
+              period.
+            </s-paragraph>
+
+            <s-section heading="Available delivery time slots">
               <s-stack direction="block" gap="base">
                 <s-checkbox
                   name="enableMorning"
@@ -186,20 +191,21 @@ export default function Index() {
               <s-stack direction="block" gap="base">
                 <s-checkbox
                   name="disableSunday"
-                  label="Disable Sunday delivery"
+                  label="Disable Sunday deliveries"
                   defaultChecked={settings.disableSunday}
                 />
 
                 <s-text-area
                   name="blockedDates"
-                  label="Blocked delivery dates"
+                  label="Blocked delivery dates (YYYY-MM-DD)"
                   rows="6"
                   defaultValue={settings.blockedDates || ""}
-                  placeholder={"2026-12-25\n2026-12-31\n2027-01-01"}
+                  placeholder={"2026-12-25\n2026-12-26\n2027-01-01"}
                 />
 
                 <s-paragraph>
-                  Enter one blocked delivery date per line. Format: YYYY-MM-DD.
+                  Enter one blocked delivery date per line. These dates will not
+                  be available to customers.
                 </s-paragraph>
               </s-stack>
             </s-section>
@@ -209,21 +215,25 @@ export default function Index() {
               variant="primary"
               {...(isSaving ? { loading: true } : {})}
             >
-              Save settings
+              Save Changes
             </s-button>
           </s-stack>
         </fetcher.Form>
       </s-section>
 
-      <s-section slot="aside" heading="DeliveryPulse Features">
+      <s-section slot="aside" heading="Key Features">
         <s-unordered-list>
-          <s-list-item>Delivery date picker</s-list-item>
-          <s-list-item>Delivery time slots</s-list-item>
+          <s-list-item>Customer delivery date picker</s-list-item>
+          <s-list-item>Flexible delivery time slots</s-list-item>
           <s-list-item>Minimum preparation days</s-list-item>
-          <s-list-item>Blocked delivery dates</s-list-item>
-          <s-list-item>Disable Sunday delivery</s-list-item>
+          <s-list-item>Holiday and blocked dates</s-list-item>
+          <s-list-item>Sunday delivery restrictions</s-list-item>
           <s-list-item>Order delivery attributes</s-list-item>
         </s-unordered-list>
+
+        <s-paragraph>
+          Easy setup. No coding required.
+        </s-paragraph>
       </s-section>
     </s-page>
   );
