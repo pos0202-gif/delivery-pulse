@@ -23,15 +23,29 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
+
   const formData = await request.formData();
+
+  const cleanBlockedDates = String(formData.get("blockedDates") || "")
+    .split(/\r?\n/)
+    .map((date) => date.trim())
+    .filter(Boolean)
+    .join("\n");
 
   const settingsData = {
     enabled: formData.get("enabled") === "on",
     minimumPreparationDays: Number(formData.get("minimumPreparationDays") || 1),
+
     enableMorning: formData.get("enableMorning") === "on",
     enableAfternoon: formData.get("enableAfternoon") === "on",
     enableEvening: formData.get("enableEvening") === "on",
+
+    morningLabel: formData.get("morningLabel") || "Morning",
+    afternoonLabel: formData.get("afternoonLabel") || "Afternoon",
+    eveningLabel: formData.get("eveningLabel") || "Evening",
+
     disableSunday: formData.get("disableSunday") === "on",
+    blockedDates: cleanBlockedDates,
   };
 
   const settings = await db.deliverySettings.upsert({
@@ -85,7 +99,7 @@ export const action = async ({ request }) => {
           },
         ],
       },
-    }
+    },
   );
 
   return { success: true, settings };
@@ -132,30 +146,62 @@ export default function Index() {
               <s-stack direction="block" gap="base">
                 <s-checkbox
                   name="enableMorning"
-                  label="Morning"
+                  label="Enable morning slot"
                   defaultChecked={settings.enableMorning}
+                />
+
+                <s-text-field
+                  name="morningLabel"
+                  label="Morning label"
+                  defaultValue={settings.morningLabel || "Morning"}
                 />
 
                 <s-checkbox
                   name="enableAfternoon"
-                  label="Afternoon"
+                  label="Enable afternoon slot"
                   defaultChecked={settings.enableAfternoon}
+                />
+
+                <s-text-field
+                  name="afternoonLabel"
+                  label="Afternoon label"
+                  defaultValue={settings.afternoonLabel || "Afternoon"}
                 />
 
                 <s-checkbox
                   name="enableEvening"
-                  label="Evening"
+                  label="Enable evening slot"
                   defaultChecked={settings.enableEvening}
+                />
+
+                <s-text-field
+                  name="eveningLabel"
+                  label="Evening label"
+                  defaultValue={settings.eveningLabel || "Evening"}
                 />
               </s-stack>
             </s-section>
 
-            <s-section heading="Disabled Days">
-              <s-checkbox
-                name="disableSunday"
-                label="Disable Sunday delivery"
-                defaultChecked={settings.disableSunday}
-              />
+            <s-section heading="Delivery Restrictions">
+              <s-stack direction="block" gap="base">
+                <s-checkbox
+                  name="disableSunday"
+                  label="Disable Sunday delivery"
+                  defaultChecked={settings.disableSunday}
+                />
+
+                <s-text-area
+                  name="blockedDates"
+                  label="Blocked delivery dates"
+                  rows="6"
+                  defaultValue={settings.blockedDates || ""}
+                  placeholder={"2026-12-25\n2026-12-31\n2027-01-01"}
+                />
+
+                <s-paragraph>
+                  Enter one blocked delivery date per line. Format: YYYY-MM-DD.
+                </s-paragraph>
+              </s-stack>
             </s-section>
 
             <s-button
@@ -169,12 +215,14 @@ export default function Index() {
         </fetcher.Form>
       </s-section>
 
-      <s-section slot="aside" heading="MVP Plan">
+      <s-section slot="aside" heading="DeliveryPulse Features">
         <s-unordered-list>
-          <s-list-item>Show date picker on product page</s-list-item>
-          <s-list-item>Let customers choose a delivery time slot</s-list-item>
-          <s-list-item>Save choices into cart/order attributes</s-list-item>
-          <s-list-item>Let merchants manage delivery rules</s-list-item>
+          <s-list-item>Delivery date picker</s-list-item>
+          <s-list-item>Delivery time slots</s-list-item>
+          <s-list-item>Minimum preparation days</s-list-item>
+          <s-list-item>Blocked delivery dates</s-list-item>
+          <s-list-item>Disable Sunday delivery</s-list-item>
+          <s-list-item>Order delivery attributes</s-list-item>
         </s-unordered-list>
       </s-section>
     </s-page>

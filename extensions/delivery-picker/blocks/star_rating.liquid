@@ -2,43 +2,264 @@
 
 {% if delivery_settings == blank or delivery_settings.enabled != false %}
   <div class="delivery-pulse-widget">
-    <h3>Choose Delivery Date</h3>
+    <div class="delivery-pulse-header">
+      <div class="delivery-pulse-icon">🚚</div>
+      <div>
+        <h3>Delivery Options</h3>
+        <p>Select your preferred delivery date and time.</p>
+      </div>
+    </div>
 
-    <input
-      type="date"
-      id="delivery-pulse-date"
-      required
+    <div class="delivery-pulse-summary">
+      <div class="delivery-pulse-summary-item">
+        <span>✓</span>
+        <p>
+          Earliest available delivery:
+          <strong id="delivery-pulse-earliest">Loading...</strong>
+        </p>
+      </div>
+
+      {% if delivery_settings == blank or delivery_settings.disableSunday %}
+        <div class="delivery-pulse-summary-item">
+          <span>✓</span>
+          <p>Sunday delivery unavailable</p>
+        </div>
+      {% endif %}
+
+      {% if delivery_settings.blockedDates != blank %}
+        {% assign blocked_dates_count = delivery_settings.blockedDates | split: '
+' | size %}
+        <div class="delivery-pulse-summary-item">
+          <span>✓</span>
+
+          {% if blocked_dates_count == 1 %}
+            <p>1 blocked delivery date</p>
+          {% else %}
+            <p>{{ blocked_dates_count }} blocked delivery dates</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="delivery-pulse-field">
+      <label for="delivery-pulse-date">Delivery Date</label>
+      <input
+        type="date"
+        id="delivery-pulse-date"
+        required
+      >
+    </div>
+
+    <div class="delivery-pulse-field">
+      <p class="delivery-pulse-label">Available Time Slots</p>
+
+      <div class="delivery-pulse-options">
+        {% if delivery_settings == blank or delivery_settings.enableMorning %}
+          <label class="delivery-pulse-option">
+            <input
+              type="radio"
+              name="delivery_pulse_time"
+              value="{{ delivery_settings.morningLabel | default: 'Morning' }}"
+              required
+            >
+            <span>{{ delivery_settings.morningLabel | default: 'Morning' }}</span>
+          </label>
+        {% endif %}
+
+        {% if delivery_settings == blank or delivery_settings.enableAfternoon %}
+          <label class="delivery-pulse-option">
+            <input
+              type="radio"
+              name="delivery_pulse_time"
+              value="{{ delivery_settings.afternoonLabel | default: 'Afternoon' }}"
+              required
+            >
+            <span>{{ delivery_settings.afternoonLabel | default: 'Afternoon' }}</span>
+          </label>
+        {% endif %}
+
+        {% if delivery_settings == blank or delivery_settings.enableEvening %}
+          <label class="delivery-pulse-option">
+            <input
+              type="radio"
+              name="delivery_pulse_time"
+              value="{{ delivery_settings.eveningLabel | default: 'Evening' }}"
+              required
+            >
+            <span>{{ delivery_settings.eveningLabel | default: 'Evening' }}</span>
+          </label>
+        {% endif %}
+      </div>
+    </div>
+
+    <div
+      id="delivery-pulse-success"
+      class="delivery-pulse-success"
+      hidden
     >
-
-    <h3 style="margin-top:16px;">Delivery Time</h3>
-
-    {% if delivery_settings == blank or delivery_settings.enableMorning %}
-      <label>
-        <input type="radio" name="delivery_pulse_time" value="Morning" required>
-        Morning
-      </label><br>
-    {% endif %}
-
-    {% if delivery_settings == blank or delivery_settings.enableAfternoon %}
-      <label>
-        <input type="radio" name="delivery_pulse_time" value="Afternoon" required>
-        Afternoon
-      </label><br>
-    {% endif %}
-
-    {% if delivery_settings == blank or delivery_settings.enableEvening %}
-      <label>
-        <input type="radio" name="delivery_pulse_time" value="Evening" required>
-        Evening
-      </label><br>
-    {% endif %}
+      ✓ Delivery preferences saved
+    </div>
   </div>
+
+  <style>
+    .delivery-pulse-widget {
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .delivery-pulse-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .delivery-pulse-icon {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .delivery-pulse-header h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .delivery-pulse-header p {
+      margin: 4px 0 0;
+      font-size: 14px;
+      opacity: 0.75;
+    }
+
+    .delivery-pulse-summary {
+      display: grid;
+      gap: 8px;
+      margin: 14px 0 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .delivery-pulse-summary-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .delivery-pulse-summary-item span {
+      color: #008060;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .delivery-pulse-summary-item p {
+      margin: 0;
+      opacity: 0.85;
+    }
+
+    .delivery-pulse-summary-item strong {
+      font-weight: 700;
+    }
+
+    .delivery-pulse-field {
+      margin-top: 14px;
+    }
+
+    .delivery-pulse-field label,
+    .delivery-pulse-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    #delivery-pulse-date {
+      width: 100%;
+      max-width: 260px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      font-size: 14px;
+      background: #ffffff;
+    }
+
+    .delivery-pulse-options {
+      display: grid;
+      gap: 8px;
+    }
+
+    .delivery-pulse-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 10px;
+      background: #ffffff;
+      cursor: pointer;
+      transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .delivery-pulse-option:hover {
+      border-color: rgba(0, 128, 96, 0.6);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .delivery-pulse-option:has(input:checked) {
+      border: 2px solid #008060;
+      background: rgba(0, 128, 96, 0.08);
+      box-shadow: 0 0 0 1px rgba(0, 128, 96, 0.12);
+    }
+
+    .delivery-pulse-option input {
+      margin: 0;
+    }
+
+    .delivery-pulse-option input[type="radio"] {
+      accent-color: #008060;
+    }
+
+    .delivery-pulse-option span {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .delivery-pulse-success {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(0, 128, 96, 0.1);
+      color: #006e52;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
 
   <script>
   document.addEventListener("DOMContentLoaded", () => {
     const dateInput = document.getElementById("delivery-pulse-date");
     const form = document.querySelector('form[action="/cart/add"]');
     const addButton = document.querySelector('button[name="add"]');
+    const earliestText = document.getElementById("delivery-pulse-earliest");
+    const successMessage = document.getElementById("delivery-pulse-success");
 
     if (!dateInput || !form || !addButton) return;
 
@@ -47,6 +268,14 @@
 
     const minimumPreparationDays =
       {{ delivery_settings.minimumPreparationDays | default: 1 | json }};
+
+    const blockedDatesText =
+      {{ delivery_settings.blockedDates | default: "" | json }};
+
+    const blockedDates = String(blockedDatesText || "")
+      .split(/\r?\n/)
+      .map((date) => date.trim())
+      .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date));
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -59,8 +288,16 @@
     const minimumDateString = minimumDate.toISOString().split("T")[0];
     dateInput.setAttribute("min", minimumDateString);
 
+    if (earliestText) {
+      earliestText.textContent = minimumDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
     function validateDeliveryDate() {
-      const date = dateInput.value;
+      const date = String(dateInput.value || "").trim();
 
       if (!date) {
         return false;
@@ -71,7 +308,11 @@
       if (selectedDate < minimumDate) {
         alert(
           "Earliest available delivery date is " +
-          minimumDate.toLocaleDateString()
+          minimumDate.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+          })
         );
 
         dateInput.value = "";
@@ -80,6 +321,12 @@
 
       if (disableSunday && selectedDate.getDay() === 0) {
         alert("Sunday delivery is not available.");
+        dateInput.value = "";
+        return false;
+      }
+
+      if (blockedDates.some((blockedDate) => blockedDate === date)) {
+        alert("This delivery date is not available.");
         dateInput.value = "";
         return false;
       }
@@ -104,7 +351,7 @@
         return;
       }
 
-      const date = dateInput.value;
+      const date = String(dateInput.value || "").trim();
       const time = document.querySelector(
         'input[name="delivery_pulse_time"]:checked'
       )?.value;
@@ -122,6 +369,11 @@
       try {
         addButton.setAttribute("disabled", "disabled");
 
+        if (successMessage) {
+          successMessage.hidden = false;
+          successMessage.textContent = "✓ Delivery preferences saved";
+        }
+
         const response = await fetch("/cart/add.js", {
           method: "POST",
           body: formData,
@@ -136,9 +388,17 @@
 
         await response.json();
 
-        window.location.href = "/cart";
+        window.setTimeout(() => {
+          window.location.href = "/cart";
+        }, 800);
       } catch (error) {
         console.error(error);
+
+        if (successMessage) {
+          successMessage.hidden = false;
+          successMessage.textContent = "Could not add item to cart. Please try again.";
+        }
+
         alert("Could not add item to cart. Please try again.");
       } finally {
         addButton.removeAttribute("disabled");

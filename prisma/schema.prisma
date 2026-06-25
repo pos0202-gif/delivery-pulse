@@ -45,7 +45,13 @@ model DeliverySettings {
   enableAfternoon        Boolean  @default(true)
   enableEvening          Boolean  @default(false)
 
+  morningLabel           String   @default("Morning")
+  afternoonLabel         String   @default("Afternoon")
+  eveningLabel           String   @default("Evening")
+
   disableSunday          Boolean  @default(true)
+
+  blockedDates           String?  @default("")
 
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
